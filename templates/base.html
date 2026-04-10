@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>PizzaFlow Manager</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        nav a { margin: 10px; text-decoration: none; color: #333; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Главная</a>
+        <a href="/constructor">Конструктор</a>
+        {% if request.session.user_id and request.session.role == 'client' %}
+            <a href="/my_orders">Мои заказы</a>
+            <a href="/favorites">Избранное</a>
+        {% endif %}
+        <a href="/kitchen">Кухня</a>
+        <a href="/courier">Курьер</a>
+        {% if request.session.role == 'admin' %}<a href="/admin/dashboard">Админ</a>{% endif %}
+        <a href="/admin/">Django-админка</a>
+        {% if request.session.user_id %}<a href="/logout">Выйти</a>{% else %}<a href="/login">Войти</a>{% endif %}
+    </nav>
+    {% if messages %}
+        {% for msg in messages %}
+            <p style="color: green;">{{ msg }}</p>
+        {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+</body>
+</html>

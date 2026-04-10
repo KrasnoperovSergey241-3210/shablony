@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Конструктор пиццы</h1>
+<form method="POST">
+    {% csrf_token %}
+    <h3>Основа</h3>
+    {% for i in ingredients %}
+        {% if i.category == 'base' %}
+            <label><input type="radio" name="base" value="{{ i.ingredient_id }}"> {{ i }} </label><br>
+        {% endif %}
+    {% endfor %}
+
+    <h3>Соус</h3>
+    {% for i in ingredients %}
+        {% if i.category == 'sauce' %}
+            <label><input type="radio" name="sauce" value="{{ i.ingredient_id }}"> {{ i }} </label><br>
+        {% endif %}
+    {% endfor %}
+
+    <h3>Сыр</h3>
+    {% for i in ingredients %}
+        {% if i.category == 'cheese' %}
+            <label><input type="radio" name="cheese" value="{{ i.ingredient_id }}"> {{ i }} </label><br>
+        {% endif %}
+    {% endfor %}
+
+    <h3>Топпинги (до 8)</h3>
+    {% for i in ingredients %}
+        {% if i.category == 'topping' %}
+            <label><input type="checkbox" name="toppings" value="{{ i.ingredient_id }}"> {{ i }}</label><br>
+        {% endif %}
+    {% endfor %}
+
+    <label><input type="checkbox" name="save_favorite"> Сохранить в Избранное</label><br><br>
+
+    <h2>Стоимость: <span id="total">0</span> ₽</h2>
+    <button type="submit">Сохранить и заказать</button>
+</form>
+
+<script>
+let total = 0;
+function updatePrice() {
+    total = 0;
+    document.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked').forEach(el => {
+        const match = el.parentElement.textContent.match(/\d+/);
+        if (match) total += parseFloat(match[0]);
+    });
+    document.getElementById('total').textContent = total;
+}
+document.querySelectorAll('input').forEach(el => el.addEventListener('change', updatePrice));
+</script>
+{% endblock %}

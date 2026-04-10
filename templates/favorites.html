@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Избранные кастомные пиццы</h1>
+{% if favorites %}
+    <ul>
+    {% for fav in favorites %}
+        <li>
+            <strong>Пицца #{{ fav.custom_pizza_id }}</strong> — 
+            {{ fav.custom_price }} ₽ 
+            (создана {{ fav.created_at|date:"d.m.Y" }})
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>В избранном пока ничего нет. Создайте пиццу в конструкторе и сохраните её!</p>
+{% endif %}
+{% endblock %}

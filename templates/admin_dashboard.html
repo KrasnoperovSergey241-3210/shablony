@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Админ-панель</h1>
+<h2>Все заказы</h2>
+<table border="1" cellpadding="8" style="width:100%; border-collapse:collapse;">
+    <tr><th>ID</th><th>Клиент</th><th>Статус</th><th>Тип</th><th>Сумма</th></tr>
+    {% for order in orders %}
+    <tr>
+        <td>#{{ order.order_id }}</td>
+        <td>{{ order.client.name }}</td>
+        <td>{{ order.status }}</td>
+        <td>{{ order.delivery_type }}</td>
+        <td>{{ order.amount }} ₽</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Ингредиенты (можно редактировать в Django-админке)</h2>
+<a href="/admin/" target="_blank">Открыть полную Django-админку →</a>
+{% endblock %}

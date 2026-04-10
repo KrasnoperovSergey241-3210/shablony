@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Вход для администратора</h1>
+<form method="POST">
+    {% csrf_token %}
+    <p><strong>Логин (username):</strong><br>
+        <input type="text" name="username" value="admin" required style="width:300px; padding:8px;">
+    </p>
+    <p><strong>Пароль:</strong><br>
+        <input type="password" name="password" value="admin" required style="width:300px; padding:8px;">
+    </p>
+    <button type="submit" style="padding:12px 25px;">Войти как администратор</button>
+</form>
+{% endblock %}

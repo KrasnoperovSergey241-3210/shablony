@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Добро пожаловать в PizzaFlow Manager!</h1>
+<p>Выберите готовую пиццу или соберите свою в конструкторе.</p>
+
+<a href="/constructor" style="font-size:1.2em; padding:15px 30px; background:#ff5722; color:white; text-decoration:none; border-radius:8px;">
+    Перейти в конструктор пиццы →
+</a>
+
+<br><br>
+<a href="/init_data/" style="color:#ff5722; font-weight:bold;">[Загрузить начальные данные (ингредиенты + курьеры + админ)]</a>
+
+<h2>Ингредиенты в наличии:</h2>
+<ul>
+{% for ing in ingredients %}
+    <li>{{ ing.ingredient_name }} — {{ ing.price }} ₽ ({{ ing.category }})</li>
+{% endfor %}
+</ul>
+{% endblock %}

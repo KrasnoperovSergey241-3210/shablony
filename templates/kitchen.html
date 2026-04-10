@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .order-card {
+        border: 2px solid #ff5722;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+        background: #fff;
+    }
+    .update-btn {
+        margin-top: 8px;
+        padding: 8px 16px;
+        background: #ff5722;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .update-btn:hover {
+        background: #e64a19;
+    }
+</style>
+
+<h1>Кухня — Умный конвейер</h1>
+<p>Здесь отображается очередь заказов. Нажмите кнопку, чтобы изменить статус.</p>
+
+{% for order in orders %}
+    <div class="order-card">
+        <strong>Заказ #{{ order.order_id }}</strong> — 
+        <span style="color:#4caf50; font-weight:bold;">{{ order.status }}</span><br>
+        Тип: {{ order.delivery_type }} | 
+        Сумма: {{ order.amount }} ₽<br>
+        
+        <button data-order-id="{{ order.order_id }}" class="update-btn">
+            Следующий статус →
+        </button>
+    </div>
+{% endfor %}
+
+<script>
+    document.querySelectorAll('.update-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const orderId = this.getAttribute('data-order-id');
+            
+            fetch(`/api/update_status/${orderId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    alert(`Заказ #${data.order_id} → ${data.status}`);
+                    location.reload();
+                })
+                .catch(error => console.error('Ошибка:', error));
+        });
+    });
+</script>
+{% endblock %}
