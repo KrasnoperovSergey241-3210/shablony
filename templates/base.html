@@ -2,31 +2,773 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>PizzaFlow Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PizzaFlow - Лучшая пицца в городе</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        nav a { margin: 10px; text-decoration: none; color: #333; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #d32f2f;
+            --primary-dark: #b71c1c;
+            --secondary: #fbc02d;
+            --dark: #1a1a1a;
+            --light: #f8f8f8;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+        
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logo span {
+            font-size: 2rem;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: var(--transition);
+            display: inline-block;
+        }
+        
+        nav a:hover, nav a.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .cart-link {
+            position: relative;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.5rem 1.2rem;
+        }
+        
+        .cart-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary);
+            color: var(--dark);
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 20px;
+        }
+        
+        .messages {
+            margin-bottom: 1.5rem;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+            color: white;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+        
+        .btn, button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1rem;
+        }
+        
+        .btn:hover, button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+        }
+        
+        .btn-success {
+            background: #4caf50;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%), url('https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200');
+            background-size: cover;
+            background-position: center;
+            border-radius: 24px;
+            padding: 5rem 2rem;
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .btn-outline-light {
+            background: transparent;
+            border: 2px solid white;
+        }
+        
+        .btn-outline-light:hover {
+            background: white;
+            color: #d32f2f;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            color: #d32f2f;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .feature-card p {
+            color: #666;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        
+        .section-title h2 {
+            display: inline-block;
+            position: relative;
+            font-size: 2.2rem;
+            color: var(--dark);
+        }
+        
+        .section-title h2:after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+        
+        .pizza-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        .pizza-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .pizza-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .pizza-image {
+            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+        }
+        
+        .pizza-info {
+            padding: 1.5rem;
+        }
+        
+        .pizza-info h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+        
+        .pizza-info p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+        
+        .pizza-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        .pizza-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        
+        .stats {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+            padding: 3rem;
+            border-radius: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .stat-item h3 {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-item p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .cta {
+            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            color: white;
+        }
+        
+        .cta h2 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .cta h2:after {
+            background: white;
+        }
+        
+        .cta p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 0 1.5rem;
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+        
+        .footer-column h3 {
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column ul li {
+            margin: 0.75rem 0;
+        }
+        
+        .footer-column a {
+            color: #bbb;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-column a:hover {
+            color: var(--secondary);
+            padding-left: 5px;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #999;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            nav {
+                display: none;
+                width: 100%;
+                background: var(--primary-dark);
+                position: absolute;
+                top: 100%;
+                left: 0;
+                padding: 1rem 0;
+            }
+            
+            nav.active {
+                display: block;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            nav li {
+                width: 100%;
+                text-align: center;
+            }
+            
+            nav a {
+                display: block;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .pizza-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <nav>
-        <a href="/">Главная</a>
-        <a href="/constructor">Конструктор</a>
-        {% if request.session.user_id and request.session.role == 'client' %}
-            <a href="/my_orders">Мои заказы</a>
-            <a href="/favorites">Избранное</a>
-        {% endif %}
-        <a href="/kitchen">Кухня</a>
-        <a href="/courier">Курьер</a>
-        {% if request.session.role == 'admin' %}<a href="/admin/dashboard">Админ</a>{% endif %}
-        <a href="/admin/">Django-админка</a>
-        {% if request.session.user_id %}<a href="/logout">Выйти</a>{% else %}<a href="/login">Войти</a>{% endif %}
-    </nav>
-    {% if messages %}
-        {% for msg in messages %}
-            <p style="color: green;">{{ msg }}</p>
-        {% endfor %}
-    {% endif %}
-    {% block content %}{% endblock %}
+    <header>
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span>🍕</span> PizzaFlow
+            </a>
+            
+            <button class="menu-toggle" id="menuToggle">
+                ☰
+            </button>
+            
+            <nav id="mainNav">
+                <ul>
+                    <li><a href="/">Главная</a></li>
+                    <li><a href="/constructor">Конструктор</a></li>
+                    {% if request.session.user_id and request.session.role == 'client' %}
+                        <li><a href="/my_orders">Мои заказы</a></li>
+                        <li><a href="/favorites">Избранное</a></li>
+                    {% endif %}
+                    <li><a href="/kitchen">Кухня</a></li>
+                    <li><a href="/courier">Курьеры</a></li>
+                    {% if request.session.role == 'admin' %}
+                        <li><a href="/admin/dashboard">Админ панель</a></li>
+                    {% endif %}
+                    <li><a href="/cart" class="cart-link">
+                        🛒 Корзина
+                        {% if cart_count > 0 %}
+                        <span class="cart-badge" id="cartCount">{{ cart_count }}</span>
+                        {% endif %}
+                    </a></li>
+                    {% if request.session.user_id %}
+                        <li><a href="/logout">🚪 Выйти</a></li>
+                    {% else %}
+                        <li><a href="/login">🔑 Войти</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% if request.path == '/' %}
+            <div class="hero">
+                <h1>Добро пожаловать в PizzaFlow</h1>
+                <p>Самая вкусная пицца с доставкой на дом</p>
+                <div class="hero-buttons">
+                    <a href="/constructor" class="btn btn-large">Собрать свою пиццу</a>
+                    <a href="/my_orders" class="btn btn-large btn-outline-light">Мои заказы</a>
+                </div>
+            </div>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🍕</div>
+                    <h3>Свежая пицца</h3>
+                    <p>Готовим только из свежих ингредиентов. Тесто готовим сами каждое утро</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚚</div>
+                    <h3>Быстрая доставка</h3>
+                    <p>Доставим за 30 минут или пицца бесплатно</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Конструктор пиццы</h3>
+                    <p>Создайте пиццу своей мечты с любимыми ингредиентами</p>
+                </div>
+            </div>
+            
+            {% if pizzas %}
+            <div class="section-title">
+                <h2>Наши пиццы</h2>
+            </div>
+            
+            <div class="pizza-grid">
+                {% for pizza in pizzas %}
+                <div class="pizza-card">
+                    <div class="pizza-image">🍕</div>
+                    <div class="pizza-info">
+                        <h3>{{ pizza.name }}</h3>
+                        <p>{{ pizza.description|default:"Вкусная пицца из свежих ингредиентов"|truncatechars:80 }}</p>
+                        <div class="pizza-footer">
+                            <span class="pizza-price">{{ pizza.base_price }} ₽</span>
+                            <button class="btn" onclick="addToCart('pizza', {{ pizza.pizza_id }}, '{{ pizza.name }}', {{ pizza.base_price }})">В корзину</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <h3>{{ total_clients|default:"1000" }}+</h3>
+                    <p>Довольных клиентов</p>
+                </div>
+                <div class="stat-item">
+                    <h3>30 мин</h3>
+                    <p>Среднее время доставки</p>
+                </div>
+                <div class="stat-item">
+                    <h3>{{ pizzas_count|default:"15" }}+</h3>
+                    <p>Видов пиццы</p>
+                </div>
+                <div class="stat-item">
+                    <h3>{{ couriers_count|default:"5" }}</h3>
+                    <p>Курьеров на связи</p>
+                </div>
+            </div>
+            
+            <div class="cta">
+                <h2>Готовы попробовать?</h2>
+                <p>Соберите свою идеальную пиццу прямо сейчас</p>
+                <a href="/constructor" class="btn btn-large" style="background: white; color: #d32f2f;">Собрать пиццу</a>
+            </div>
+            {% else %}
+            {% block content %}{% endblock %}
+            {% endif %}
+        </div>
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>🍕 PizzaFlow</h3>
+                <p>Мы готовим самую вкусную пиццу в городе с 2023 года.</p>
+            </div>
+            <div class="footer-column">
+                <h3>📅 Режим работы</h3>
+                <ul>
+                    <li>Пн-Пт: 10:00 - 23:00</li>
+                    <li>Сб-Вс: 11:00 - 00:00</li>
+                    <li>Доставка до 23:00</li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>📞 Контакты</h3>
+                <ul>
+                    <li>📱 +7 (999) 123-45-67</li>
+                    <li>✉️ info@pizzaflow.ru</li>
+                    <li>📍 г. Москва, ул. Пиццерийная, 15</li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>🔗 Ссылки</h3>
+                <ul>
+                    <li><a href="/constructor">Конструктор</a></li>
+                    <li><a href="/my_orders">Мои заказы</a></li>
+                    <li><a href="/cart">Корзина</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2026 PizzaFlow. Все права защищены.
+        </div>
+    </footer>
+    
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                mainNav.classList.toggle('active');
+            });
+        }
+        
+        document.querySelectorAll('#mainNav a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                mainNav.classList.remove('active');
+            });
+        });
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrftoken = getCookie('csrftoken');
+        
+        function addToCart(type, id, name, price) {
+            fetch('/api/add-to-cart/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    type: type,
+                    id: id,
+                    name: name,
+                    price: price,
+                    quantity: 1
+                })
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    const badge = document.getElementById('cartCount');
+                    if (badge) {
+                        badge.textContent = data.cart_count;
+                    } else if (data.cart_count > 0) {
+                        const cartLink = document.querySelector('.cart-link');
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'cart-badge';
+                        newBadge.id = 'cartCount';
+                        newBadge.textContent = data.cart_count;
+                        cartLink.appendChild(newBadge);
+                    }
+                    
+                    const toast = document.createElement('div');
+                    toast.className = 'alert alert-success';
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '20px';
+                    toast.style.right = '20px';
+                    toast.style.zIndex = '9999';
+                    toast.style.maxWidth = '300px';
+                    toast.style.animation = 'slideIn 0.3s ease';
+                    toast.innerHTML = name + ' добавлена в корзину';
+                    document.body.appendChild(toast);
+                    setTimeout(function() {
+                        toast.remove();
+                    }, 3000);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+            });
+        }
+    </script>
 </body>
 </html>

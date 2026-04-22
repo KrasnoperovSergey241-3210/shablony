@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Оформление заказа</h1>
+
+<form method="POST" action="/create_order/">
+    {% csrf_token %}
+    
+    <p><strong>Способ получения:</strong></p>
+    <label>
+        <input type="radio" name="delivery_type" value="delivery" required onchange="toggleAddress()"> Доставка
+    </label><br>
+    <label>
+        <input type="radio" name="delivery_type" value="pickup" required onchange="toggleAddress()"> Самовывоз
+    </label>
+
+    <div id="address_block" style="display: none;">
+        <p><strong>Адрес доставки:</strong><br>
+        <input type="text" name="address" style="width:300px; padding:8px;"></p>
+    </div>
+
+    <p><strong>Сумма заказа:</strong> 599 ₽</p>
+    
+    <button type="submit" style="padding:12px 25px; background:#ff5722; color:white; border:none; border-radius:5px;">
+        Подтвердить заказ
+    </button>
+</form>
+
+<script>
+function toggleAddress() {
+    const deliveryType = document.querySelector('input[name="delivery_type"]:checked');
+    const addressBlock = document.getElementById('address_block');
+    if (deliveryType && deliveryType.value === 'delivery') {
+        addressBlock.style.display = 'block';
+    } else {
+        addressBlock.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Заказ успешно создан! 🎉</h1>
+<p>Ваш заказ #{{ order.order_id }} принят в обработку.</p>
+<p>Статус заказа: <strong>{{ order.status }}</strong></p>
+<p>Сумма: {{ order.amount }} ₽</p>
+
+<a href="/my_orders" class="btn">Перейти к моим заказам</a>
+<a href="/" class="btn">На главную</a>
+
+<style>
+    .btn {
+        display: inline-block;
+        margin: 10px;
+        padding: 10px 20px;
+        background: #ff5722;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}

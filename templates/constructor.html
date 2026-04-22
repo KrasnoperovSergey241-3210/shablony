@@ -1,52 +1,403 @@
+<!-- templates/constructor.html -->
 {% extends 'base.html' %}
+
 {% block content %}
-<h1>Конструктор пиццы</h1>
-<form method="POST">
-    {% csrf_token %}
-    <h3>Основа</h3>
-    {% for i in ingredients %}
-        {% if i.category == 'base' %}
-            <label><input type="radio" name="base" value="{{ i.ingredient_id }}"> {{ i }} </label><br>
-        {% endif %}
-    {% endfor %}
+<style>
+    .constructor-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .constructor-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .constructor-header h1 {
+        font-size: 2.5rem;
+        color: #d32f2f;
+        margin-bottom: 0.5rem;
+    }
+    
+    .constructor-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+    
+    .ingredient-section {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 4px solid #d32f2f;
+    }
+    
+    .ingredient-section h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+        color: #333;
+        font-size: 1.3rem;
+    }
+    
+    .ingredient-section h3:before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: #d32f2f;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    
+    .ingredient-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .ingredient-option {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .ingredient-option:hover {
+        background: #fff3e0;
+        transform: translateX(5px);
+    }
+    
+    .ingredient-option.selected {
+        background: #fff3e0;
+        border-color: #d32f2f;
+    }
+    
+    .ingredient-option input {
+        margin-right: 10px;
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+    
+    .ingredient-option label {
+        flex: 1;
+        cursor: pointer;
+        margin: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .ingredient-price {
+        color: #d32f2f;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    .favorite-checkbox {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .favorite-checkbox input {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    
+    .favorite-checkbox label {
+        margin: 0;
+        cursor: pointer;
+        color: #ff9800;
+        font-weight: 500;
+    }
+    
+    .price-preview {
+        background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+    
+    .price-preview span:first-child {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .price-preview span:last-child {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+        color: white;
+        border: none;
+        padding: 1rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(211, 47, 47, 0.4);
+    }
+    
+    .toppings-limit {
+        font-size: 0.8rem;
+        color: #999;
+        margin-top: 0.5rem;
+        text-align: right;
+    }
+    
+    .toppings-count {
+        color: #d32f2f;
+        font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+        .ingredient-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .constructor-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .price-preview span:last-child {
+            font-size: 1.4rem;
+        }
+    }
+</style>
 
-    <h3>Соус</h3>
-    {% for i in ingredients %}
-        {% if i.category == 'sauce' %}
-            <label><input type="radio" name="sauce" value="{{ i.ingredient_id }}"> {{ i }} </label><br>
-        {% endif %}
-    {% endfor %}
-
-    <h3>Сыр</h3>
-    {% for i in ingredients %}
-        {% if i.category == 'cheese' %}
-            <label><input type="radio" name="cheese" value="{{ i.ingredient_id }}"> {{ i }} </label><br>
-        {% endif %}
-    {% endfor %}
-
-    <h3>Топпинги (до 8)</h3>
-    {% for i in ingredients %}
-        {% if i.category == 'topping' %}
-            <label><input type="checkbox" name="toppings" value="{{ i.ingredient_id }}"> {{ i }}</label><br>
-        {% endif %}
-    {% endfor %}
-
-    <label><input type="checkbox" name="save_favorite"> Сохранить в Избранное</label><br><br>
-
-    <h2>Стоимость: <span id="total">0</span> ₽</h2>
-    <button type="submit">Сохранить и заказать</button>
-</form>
+<div class="constructor-container">
+    <div class="constructor-header">
+        <h1>Создайте свою идеальную пиццу</h1>
+        <p>Выберите основу, соус, сыр и добавьте любимые топпинги</p>
+    </div>
+    
+    <form method="POST" id="constructorForm">
+        {% csrf_token %}
+        
+        <div class="ingredient-section">
+            <h3>Выберите основу</h3>
+            <div class="ingredient-grid">
+                {% for ingredient in ingredients %}
+                    {% if ingredient.category == 'base' %}
+                        <div class="ingredient-option" onclick="selectIngredient(this, 'base')">
+                            <input type="radio" name="base" value="{{ ingredient.ingredient_id }}" required id="base_{{ ingredient.ingredient_id }}">
+                            <label for="base_{{ ingredient.ingredient_id }}">
+                                <span>{{ ingredient.ingredient_name }}</span>
+                                <span class="ingredient-price">{{ ingredient.price }} ₽</span>
+                            </label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="ingredient-section">
+            <h3>Выберите соус</h3>
+            <div class="ingredient-grid">
+                {% for ingredient in ingredients %}
+                    {% if ingredient.category == 'sauce' %}
+                        <div class="ingredient-option" onclick="selectIngredient(this, 'sauce')">
+                            <input type="radio" name="sauce" value="{{ ingredient.ingredient_id }}" required id="sauce_{{ ingredient.ingredient_id }}">
+                            <label for="sauce_{{ ingredient.ingredient_id }}">
+                                <span>{{ ingredient.ingredient_name }}</span>
+                                <span class="ingredient-price">{{ ingredient.price }} ₽</span>
+                            </label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="ingredient-section">
+            <h3>Выберите сыр</h3>
+            <div class="ingredient-grid">
+                {% for ingredient in ingredients %}
+                    {% if ingredient.category == 'cheese' %}
+                        <div class="ingredient-option" onclick="selectIngredient(this, 'cheese')">
+                            <input type="radio" name="cheese" value="{{ ingredient.ingredient_id }}" required id="cheese_{{ ingredient.ingredient_id }}">
+                            <label for="cheese_{{ ingredient.ingredient_id }}">
+                                <span>{{ ingredient.ingredient_name }}</span>
+                                <span class="ingredient-price">{{ ingredient.price }} ₽</span>
+                            </label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="ingredient-section">
+            <h3>Добавьте топпинги (до 8)</h3>
+            <div class="ingredient-grid">
+                {% for ingredient in ingredients %}
+                    {% if ingredient.category == 'topping' %}
+                        <div class="ingredient-option" onclick="toggleTopping(this)">
+                            <input type="checkbox" name="toppings" value="{{ ingredient.ingredient_id }}" id="topping_{{ ingredient.ingredient_id }}">
+                            <label for="topping_{{ ingredient.ingredient_id }}">
+                                <span>{{ ingredient.ingredient_name }}</span>
+                                <span class="ingredient-price">{{ ingredient.price }} ₽</span>
+                            </label>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="toppings-limit">
+                Выбрано топпингов: <span class="toppings-count" id="toppingsCount">0</span> / 8
+            </div>
+        </div>
+        
+        <div class="favorite-checkbox">
+            <input type="checkbox" name="save_favorite" id="save_favorite">
+            <label for="save_favorite">Сохранить эту пиццу в избранное</label>
+        </div>
+        
+        <div class="price-preview">
+            <span>Стоимость пиццы:</span>
+            <span id="totalPrice">0</span>
+            <span>₽</span>
+        </div>
+        
+        <button type="submit" class="submit-btn">
+            Добавить в корзину
+        </button>
+    </form>
+</div>
 
 <script>
-let total = 0;
-function updatePrice() {
-    total = 0;
-    document.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked').forEach(el => {
-        const match = el.parentElement.textContent.match(/\d+/);
-        if (match) total += parseFloat(match[0]);
+    let selectedBase = null;
+    let selectedSauce = null;
+    let selectedCheese = null;
+    let selectedToppings = new Set();
+    
+    function selectIngredient(element, type) {
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+        }
+        
+        document.querySelectorAll(`.ingredient-option`).forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        
+        updateTotalPrice();
+    }
+    
+    function toggleTopping(element) {
+        const checkbox = element.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                if (selectedToppings.size >= 8) {
+                    checkbox.checked = false;
+                    alert('Можно выбрать не более 8 топпингов');
+                    return;
+                }
+                selectedToppings.add(checkbox.value);
+                element.classList.add('selected');
+            } else {
+                selectedToppings.delete(checkbox.value);
+                element.classList.remove('selected');
+            }
+        }
+        
+        document.getElementById('toppingsCount').textContent = selectedToppings.size;
+        updateTotalPrice();
+    }
+    
+    function updateTotalPrice() {
+        let total = 0;
+        
+        const baseRadio = document.querySelector('input[name="base"]:checked');
+        if (baseRadio) {
+            const baseDiv = baseRadio.closest('.ingredient-option');
+            const priceSpan = baseDiv.querySelector('.ingredient-price');
+            if (priceSpan) {
+                total += parseInt(priceSpan.textContent) || 0;
+            }
+        }
+        
+        const sauceRadio = document.querySelector('input[name="sauce"]:checked');
+        if (sauceRadio) {
+            const sauceDiv = sauceRadio.closest('.ingredient-option');
+            const priceSpan = sauceDiv.querySelector('.ingredient-price');
+            if (priceSpan) {
+                total += parseInt(priceSpan.textContent) || 0;
+            }
+        }
+        
+        const cheeseRadio = document.querySelector('input[name="cheese"]:checked');
+        if (cheeseRadio) {
+            const cheeseDiv = cheeseRadio.closest('.ingredient-option');
+            const priceSpan = cheeseDiv.querySelector('.ingredient-price');
+            if (priceSpan) {
+                total += parseInt(priceSpan.textContent) || 0;
+            }
+        }
+        
+        document.querySelectorAll('input[name="toppings"]:checked').forEach(checkbox => {
+            const toppingDiv = checkbox.closest('.ingredient-option');
+            const priceSpan = toppingDiv.querySelector('.ingredient-price');
+            if (priceSpan) {
+                total += parseInt(priceSpan.textContent) || 0;
+            }
+        });
+        
+        document.getElementById('totalPrice').textContent = total;
+    }
+    
+    document.querySelectorAll('input[name="base"], input[name="sauce"], input[name="cheese"]').forEach(input => {
+        input.addEventListener('change', updateTotalPrice);
     });
-    document.getElementById('total').textContent = total;
-}
-document.querySelectorAll('input').forEach(el => el.addEventListener('change', updatePrice));
+    
+    document.querySelectorAll('input[name="toppings"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                if (selectedToppings.size >= 8) {
+                    this.checked = false;
+                    alert('Можно выбрать не более 8 топпингов');
+                    return;
+                }
+                selectedToppings.add(this.value);
+            } else {
+                selectedToppings.delete(this.value);
+            }
+            document.getElementById('toppingsCount').textContent = selectedToppings.size;
+            updateTotalPrice();
+        });
+    });
+    
+    document.querySelectorAll('.ingredient-option').forEach(opt => {
+        const radio = opt.querySelector('input[type="radio"]');
+        if (radio && radio.checked) {
+            opt.classList.add('selected');
+        }
+    });
+    
+    updateTotalPrice();
 </script>
 {% endblock %}

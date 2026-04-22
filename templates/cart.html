@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <h1>Корзина</h1>
+    
+    {% if cart_items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr id="row-{{ item.key }}">
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.price }} ₽</td>
+                    <td>
+                        <input type="number" 
+                               class="quantity-input" 
+                               value="{{ item.quantity }}" 
+                               min="1" 
+                               max="10"
+                               data-key="{{ item.key }}"
+                               style="width: 60px; padding: 5px;">
+                    </td>
+                    <td class="item-total" id="total-{{ item.key }}">{{ item.total }} ₽</td>
+                    <td>
+                        <button class="remove-btn" data-key="{{ item.key }}" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Удалить</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Товары:</strong></td>
+                    <td><strong>{{ total }} ₽</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Доставка:</strong></td>
+                    <td>
+                        {% if delivery_fee > 0 %}
+                            {{ delivery_fee }} ₽
+                        {% else %}
+                            Бесплатно
+                        {% endif %}
+                    </td>
+                    <td></td>
+                </tr>
+                <tr style="border-top: 2px solid #d32f2f;">
+                    <td colspan="3"><strong>Итого:</strong></td>
+                    <td><strong style="font-size: 1.3em; color: #d32f2f;">{{ grand_total }} ₽</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        {% if total < free_delivery_threshold %}
+            <p style="color: #ff9800; margin-top: 10px;">
+                Добавьте товаров на {{ free_delivery_threshold|add:"-"|add:total }} ₽ для бесплатной доставки
+            </p>
+        {% endif %}
+        
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: space-between;">
+            <a href="/constructor" class="btn">Продолжить покупки</a>
+            <a href="/create_order" class="btn btn-success">Оформить заказ</a>
+        </div>
+    {% else %}
+        <p class="text-center">Корзина пуста</p>
+        <div class="text-center">
+            <a href="/constructor" class="btn">Перейти в конструктор</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .quantity-input {
+        width: 60px;
+        padding: 5px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    
+    .remove-btn:hover {
+        background: #d32f2f !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInputs = document.querySelectorAll('.quantity-input');
+        const removeButtons = document.querySelectorAll('.remove-btn');
+        
+        quantityInputs.forEach(function(input) {
+            input.addEventListener('change', function() {
+                const key = this.dataset.key;
+                const quantity = parseInt(this.value);
+                
+                if (quantity < 1) {
+                    this.value = 1;
+                    return;
+                }
+                
+                fetch('/api/update-cart/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        key: key,
+                        quantity: quantity
+                    })
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        window.location.reload();
+                    }
+                });
+            });
+        });
+        
+        removeButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const key = this.dataset.key;
+                
+                if (confirm('Удалить товар из корзины?')) {
+                    fetch('/api/remove-from-cart/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify({
+                            key: key
+                        })
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.success) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

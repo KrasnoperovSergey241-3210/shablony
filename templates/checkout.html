@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-2">
+        <div class="card">
+            <h1>Оформление заказа</h1>
+            <form method="POST">
+                {% csrf_token %}
+                
+                <h3>Способ получения</h3>
+                <label>
+                    <input type="radio" name="delivery_type" value="delivery" required onchange="toggleAddress()">
+                    Доставка
+                </label>
+                <br>
+                <label>
+                    <input type="radio" name="delivery_type" value="pickup" required onchange="toggleAddress()">
+                    Самовывоз
+                </label>
+                
+                <div id="address_block" style="display: none; margin-top: 15px;">
+                    <label>Адрес доставки:</label>
+                    <input type="text" name="address" placeholder="Улица, дом, квартира">
+                </div>
+                
+                <h3 style="margin-top: 20px;">Комментарий</h3>
+                <textarea name="comment" rows="3" placeholder="Дополнительные пожелания" style="width: 100%;"></textarea>
+                
+                <div style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">Подтвердить заказ</button>
+                    <a href="/cart" style="margin-left: 10px;">Вернуться в корзину</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-1">
+        <div class="card">
+            <h3>Ваш заказ</h3>
+            <table style="width: 100%;">
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.name }} x {{ item.quantity }}</td>
+                    <td class="text-right">{{ item.total }} ₽</td>
+                </tr>
+                {% endfor %}
+                <tr style="border-top: 1px solid #ddd;">
+                    <td><strong>Товары:</strong></td>
+                    <td class="text-right">{{ total }} ₽</td>
+                </tr>
+                <tr>
+                    <td><strong>Доставка:</strong></td>
+                    <td class="text-right">
+                        {% if delivery_fee > 0 %}
+                            {{ delivery_fee }} ₽
+                        {% else %}
+                            Бесплатно
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr style="border-top: 2px solid #d32f2f;">
+                    <td><strong>Итого:</strong></td>
+                    <td class="text-right"><strong style="color: #d32f2f;">{{ grand_total }} ₽</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleAddress() {
+        const deliveryType = document.querySelector('input[name="delivery_type"]:checked');
+        const addressBlock = document.getElementById('address_block');
+        if (deliveryType && deliveryType.value === 'delivery') {
+            addressBlock.style.display = 'block';
+        } else {
+            addressBlock.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
