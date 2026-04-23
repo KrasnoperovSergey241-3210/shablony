@@ -1,12 +1,28 @@
 {% extends 'base.html' %}
+
 {% block content %}
 <style>
     .order-card {
+        background: white;
         border: 2px solid #ff5722;
         padding: 15px;
         margin: 10px 0;
         border-radius: 8px;
-        background: #fff;
+    }
+    .delivery-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        margin-left: 10px;
+    }
+    .delivery {
+        background: #2196f3;
+        color: white;
+    }
+    .pickup {
+        background: #4caf50;
+        color: white;
     }
     .update-btn {
         margin-top: 8px;
@@ -20,6 +36,10 @@
     .update-btn:hover {
         background: #e64a19;
     }
+    .finished-btn {
+        background: #999;
+        cursor: not-allowed;
+    }
 </style>
 
 <h1>Кухня — Умный конвейер</h1>
@@ -28,29 +48,46 @@
 {% for order in orders %}
     <div class="order-card">
         <strong>Заказ #{{ order.order_id }}</strong> — 
-        <span style="color:#4caf50; font-weight:bold;">{{ order.status }}</span><br>
-        Тип: {{ order.delivery_type }} | 
+        <span style="color:#4caf50; font-weight:bold;">{{ order.status }}</span>
+        <span class="delivery-badge {% if order.delivery_type == 'delivery' %}delivery{% else %}pickup{% endif %}">
+            {% if order.delivery_type == 'delivery' %}🚚 Доставка{% else %}🏪 Самовывоз{% endif %}
+        </span>
+        <br>
         Сумма: {{ order.amount }} ₽<br>
         
-        <button data-order-id="{{ order.order_id }}" class="update-btn">
-            Следующий статус →
-        </button>
+        {% if order.delivery_type == 'delivery' and order.courier %}
+            Курьер: {{ order.courier.name }}<br>
+        {% endif %}
+        
+        {% with next_status=order.get_next_status %}
+            {% if next_status %}
+                <button data-order-id="{{ order.order_id }}" class="update-btn">
+                    {{ next_status }} →
+                </button>
+            {% else %}
+                <button class="update-btn finished-btn" disabled>
+                    Заказ завершен
+                </button>
+            {% endif %}
+        {% endwith %}
     </div>
 {% endfor %}
 
 <script>
     document.querySelectorAll('.update-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const orderId = this.getAttribute('data-order-id');
-            
-            fetch(`/api/update_status/${orderId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    alert(`Заказ #${data.order_id} → ${data.status}`);
-                    location.reload();
-                })
-                .catch(error => console.error('Ошибка:', error));
-        });
+        if (!button.disabled) {
+            button.addEventListener('click', function () {
+                const orderId = this.getAttribute('data-order-id');
+                
+                fetch(`/api/update_status/${orderId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(`Заказ #${data.order_id} → ${data.status}`);
+                        location.reload();
+                    })
+                    .catch(error => console.error('Ошибка:', error));
+            });
+        }
     });
 </script>
 {% endblock %}

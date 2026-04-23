@@ -17,13 +17,24 @@
         </thead>
         <tbody>
             {% for order in orders %}
-            <tr>
+            <tr style="{% if order.status == 'Отменен' %}background:#ffebee{% endif %}">
                 <td>#{{ order.order_id }}</td>
                 <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
-                <td><strong style="color: {% if order.status == 'Доставлен' %}#4caf50{% elif order.status == 'Отменен' %}#f44336{% else %}#ff9800{% endif %}">
-                    {{ order.status }}
-                </strong></td>
-                <td>{{ order.get_delivery_type_display }}</td>
+                <td>
+                    <strong style="color: 
+                        {% if order.status == 'Доставлен' %}#4caf50
+                        {% elif order.status == 'Отменен' %}#f44336
+                        {% elif order.status == 'Передан курьеру' %}#9c27b0
+                        {% else %}#ff9800{% endif %}">
+                        {{ order.status }}
+                    </strong>
+                </td>
+                <td>
+                    {% if order.delivery_type == 'delivery' %}🚚 Доставка{% else %}🏪 Самовывоз{% endif %}
+                    {% if order.courier and order.delivery_type == 'delivery' %}
+                        <br><small>Курьер: {{ order.courier.name }}</small>
+                    {% endif %}
+                </td>
                 <td>{{ order.amount }} ₽</td>
                 <td>
                     <a href="/order/{{ order.order_id }}/track/" class="btn" style="padding: 5px 10px; font-size: 0.9rem;">Отследить</a>
