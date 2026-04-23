@@ -2,9 +2,17 @@
 
 {% block content %}
 <style>
+    h1 {
+        margin-bottom: 10px;
+    }
+
+    .under-title-text {
+        margin-top: 15px;
+        margin-bottom: 20px;
+    }
     .order-card {
         background: white;
-        border: 2px solid #ff5722;
+        border: 2px solid #d32f2f;
         padding: 15px;
         margin: 10px 0;
         border-radius: 8px;
@@ -19,22 +27,24 @@
     .delivery {
         background: #2196f3;
         color: white;
+        font-weight: 600;
     }
     .pickup {
         background: #4caf50;
         color: white;
+        font-weight: 600;
     }
     .update-btn {
         margin-top: 8px;
         padding: 8px 16px;
-        background: #ff5722;
+        background: #d32f2f;
         color: white;
         border: none;
         border-radius: 5px;
         cursor: pointer;
     }
     .update-btn:hover {
-        background: #e64a19;
+        background: #b71c1c;
     }
     .finished-btn {
         background: #999;
@@ -42,15 +52,15 @@
     }
 </style>
 
-<h1>Кухня — Умный конвейер</h1>
-<p>Здесь отображается очередь заказов. Нажмите кнопку, чтобы изменить статус.</p>
+<h1>Кухня – Умный конвейер</h1>
+<p class="under-title-text">Здесь отображается очередь заказов. Нажмите кнопку, чтобы изменить статус.</p>
 
 {% for order in orders %}
     <div class="order-card">
-        <strong>Заказ #{{ order.order_id }}</strong> — 
+        <strong>Заказ #{{ order.order_id }}</strong> – 
         <span style="color:#4caf50; font-weight:bold;">{{ order.status }}</span>
         <span class="delivery-badge {% if order.delivery_type == 'delivery' %}delivery{% else %}pickup{% endif %}">
-            {% if order.delivery_type == 'delivery' %}🚚 Доставка{% else %}🏪 Самовывоз{% endif %}
+            {% if order.delivery_type == 'delivery' %}Доставка{% else %}Самовывоз{% endif %}
         </span>
         <br>
         Сумма: {{ order.amount }} ₽<br>

@@ -124,6 +124,7 @@
     .btn-add-cart {
         background: #e74c3c;
         color: white;
+        font-weight: 600;
     }
     
     .btn-add-cart:hover {
@@ -133,6 +134,7 @@
     .btn-remove {
         background: #ecf0f1;
         color: #7f8c8d;
+        font-weight: 600;
     }
     
     .btn-remove:hover {
@@ -200,7 +202,7 @@
                 </div>
                 <div class="favorite-info">
                     <div class="favorite-id">Пицца #{{ fav.custom_pizza_id }}</div>
-                    <div class="favorite-price">{{ fav.custom_price }} ₽</div>
+                    <div class="favorite-price">{{ fav.custom_price|floatformat:2 }} ₽</div>
                     <div class="favorite-date">Создана {{ fav.created_at|date:"d.m.Y" }}</div>
                     
                     <div class="ingredients-list">
