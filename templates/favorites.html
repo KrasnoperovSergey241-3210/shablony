@@ -1,17 +1,311 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<h1>Избранные кастомные пиццы</h1>
-{% if favorites %}
-    <ul>
-    {% for fav in favorites %}
-        <li>
-            <strong>Пицца #{{ fav.custom_pizza_id }}</strong> — 
-            {{ fav.custom_price }} ₽ 
-            (создана {{ fav.created_at|date:"d.m.Y" }})
-        </li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>В избранном пока ничего нет. Создайте пиццу в конструкторе и сохраните её!</p>
-{% endif %}
+<style>
+    .favorites-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .favorites-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .favorites-header h1 {
+        font-size: 2rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .favorites-header p {
+        color: #7f8c8d;
+    }
+    
+    .favorites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .favorite-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .favorite-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    .favorite-image {
+        background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+    }
+    
+    .favorite-info {
+        padding: 1.5rem;
+    }
+    
+    .favorite-id {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        margin-bottom: 0.5rem;
+    }
+    
+    .favorite-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #e74c3c;
+        margin: 0.5rem 0;
+    }
+    
+    .favorite-date {
+        font-size: 0.8rem;
+        color: #95a5a6;
+        margin-bottom: 1rem;
+    }
+    
+    .ingredients-list {
+        margin: 1rem 0;
+        padding-top: 0.5rem;
+        border-top: 1px solid #ecf0f1;
+    }
+    
+    .ingredients-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .ingredients-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .ingredient-tag {
+        background: #f0f0f0;
+        padding: 0.25rem 0.6rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        color: #555;
+    }
+    
+    .favorite-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn {
+        flex: 1;
+        padding: 0.6rem 1rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-add-cart {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-add-cart:hover {
+        background: #c0392b;
+    }
+    
+    .btn-remove {
+        background: #ecf0f1;
+        color: #7f8c8d;
+    }
+    
+    .btn-remove:hover {
+        background: #bdc3c7;
+    }
+    
+    .empty-favorites {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .empty-favorites p {
+        color: #7f8c8d;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: #95a5a6;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: background 0.3s ease;
+    }
+    
+    .back-link:hover {
+        background: #7f8c8d;
+    }
+    
+    @media (max-width: 768px) {
+        .favorites-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .favorite-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="favorites-container">
+    <div class="favorites-header">
+        <h1>Мои любимые пиццы</h1>
+        <p>Здесь хранятся ваши кастомные пиццы, созданные в конструкторе</p>
+    </div>
+
+    {% if favorites %}
+        <div class="favorites-grid">
+            {% for fav in favorites %}
+            <div class="favorite-card" id="favorite-{{ fav.custom_pizza_id }}">
+                <div class="favorite-image">
+                    🍕
+                </div>
+                <div class="favorite-info">
+                    <div class="favorite-id">Пицца #{{ fav.custom_pizza_id }}</div>
+                    <div class="favorite-price">{{ fav.custom_price }} ₽</div>
+                    <div class="favorite-date">Создана {{ fav.created_at|date:"d.m.Y" }}</div>
+                    
+                    <div class="ingredients-list">
+                        <div class="ingredients-title">Ингредиенты:</div>
+                        <div class="ingredients-tags">
+                            {% if fav.base %}
+                                <span class="ingredient-tag">{{ fav.base.ingredient_name }}</span>
+                            {% endif %}
+                            {% if fav.sauce %}
+                                <span class="ingredient-tag">{{ fav.sauce.ingredient_name }}</span>
+                            {% endif %}
+                            {% if fav.cheese %}
+                                <span class="ingredient-tag">{{ fav.cheese.ingredient_name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="favorite-actions">
+                        <button onclick="addToCartAndRedirect({{ fav.custom_pizza_id }}, '{{ fav.custom_price }}')" class="btn btn-add-cart">
+                            Добавить в корзину
+                        </button>
+                        <button onclick="removeFromFavorites({{ fav.custom_pizza_id }})" class="btn btn-remove">
+                            Удалить
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-favorites">
+            <p>В избранном пока ничего нет</p>
+            <p>Создайте пиццу в конструкторе и сохраните её в избранное!</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function addToCartAndRedirect(pizzaId, price) {
+    fetch('/api/add-to-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            type: 'custom',
+            id: pizzaId,
+            name: 'Кастомная пицца #' + pizzaId,
+            price: parseFloat(price),
+            quantity: 1
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.getElementById('cartCount');
+            if (badge) {
+                badge.textContent = data.cart_count;
+            } else if (data.cart_count > 0) {
+                const cartLink = document.querySelector('.cart-link');
+                const newBadge = document.createElement('span');
+                newBadge.className = 'cart-badge';
+                newBadge.id = 'cartCount';
+                newBadge.textContent = data.cart_count;
+                cartLink.appendChild(newBadge);
+            }
+            window.location.href = '/cart/';
+        } else {
+            alert('Ошибка при добавлении в корзину');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка');
+    });
+}
+
+function removeFromFavorites(pizzaId) {
+    if (confirm('Удалить эту пиццу из избранного?')) {
+        fetch(`/favorites/remove/${pizzaId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const card = document.getElementById(`favorite-${pizzaId}`);
+                if (card) {
+                    card.remove();
+                }
+                if (document.querySelectorAll('.favorite-card').length === 0) {
+                    location.reload();
+                }
+            } else {
+                alert('Ошибка при удалении');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка');
+        });
+    }
+}
+</script>
 {% endblock %}
