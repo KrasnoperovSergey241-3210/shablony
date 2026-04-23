@@ -440,22 +440,26 @@ def pizza_menu(request):
 
 def optimize_route_api(request):
     if request.method == 'GET':
+        # Берем заказы, которые реально нужно везти
         pending_orders = Order.objects.filter(
-            status='Передан курьеру',
+            status__in=['В печи', 'Передан курьеру'], 
             delivery_type='delivery'
         )[:5]
         
         if not pending_orders:
-            return JsonResponse({'route': [], 'distance': 0, 'orders_count': 0})
+            return JsonResponse({'route': [], 'distance': 0, 'message': 'Нет заказов для доставки'})
         
-        restaurant_coords = (55.751244, 37.618423)
+        restaurant_coords = (55.751244, 37.618423) # Москва, центр
         deliveries = []
         
-        for order in pending_orders:
+        # Имитируем разные координаты для заказов, чтобы алгоритм имел смысл
+        # В реальной базе они должны быть в модели Order
+        for i, order in enumerate(pending_orders):
             deliveries.append({
                 'order_id': order.order_id,
-                'lat': 55.752244,
-                'lng': 37.619423,
+                # Смещаем на ~1-2 км каждый заказ для теста
+                'lat': 55.751244 + (i * 0.01), 
+                'lng': 37.618423 + (i * 0.01),
                 'address': order.address
             })
         
@@ -463,8 +467,9 @@ def optimize_route_api(request):
         route, distance = optimizer.optimize_route(restaurant_coords, deliveries)
         
         return JsonResponse({
+            'success': True,
             'route': route,
-            'distance': round(distance, 2),
+            'distance_km': round(distance, 2),
             'orders_count': len(pending_orders)
         })
     

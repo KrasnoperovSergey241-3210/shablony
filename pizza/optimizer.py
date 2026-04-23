@@ -1,6 +1,5 @@
 import math
 import heapq
-from django.db import models
 
 class DeliveryOptimizer:
     _instance = None
@@ -11,116 +10,91 @@ class DeliveryOptimizer:
         return cls._instance
     
     def haversine_distance(self, lat1, lng1, lat2, lng2):
-        R = 6371
-        lat1, lng1, lat2, lng2 = map(math.radians, [lat1, lng1, lat2, lng2])
-        dlat = lat2 - lat1
-        dlng = lng2 - lng1
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+        R = 6371  
+        try:
+            lat1, lng1, lat2, lng2 = map(float, [lat1, lng1, lat2, lng2])
+        except (ValueError, TypeError):
+            return 0.0
+
+        phi1, phi2 = math.radians(lat1), math.radians(lat2)
+        dphi = math.radians(lat2 - lat1)
+        dlambda = math.radians(lng2 - lng1)
+        
+        a = math.sin(dphi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda/2)**2
         c = 2 * math.asin(min(1, math.sqrt(a)))
         return R * c
-    
-    def calculate_distance_matrix(self, points):
-        n = len(points)
-        matrix = [[0] * n for _ in range(n)]
-        for i in range(n):
-            for j in range(n):
-                if i != j:
-                    matrix[i][j] = self.haversine_distance(
-                        points[i][0], points[i][1],
-                        points[j][0], points[j][1]
-                    )
-        return matrix
-    
-    def a_star_search(self, start, goals, distance_matrix):
-        open_set = [(0, start, [start])]
-        closed_set = set()
+
+    def a_star_search(self, start_idx, goal_indices, distance_matrix):
+
+        queue = [(0, start_idx, (start_idx,))]
         
-        while open_set:
-            cost, current, path = heapq.heappop(open_set)
+        while queue:
+            f, current, path = heapq.heappop(queue)
             
-            if current in closed_set:
-                continue
-            
-            if all(goal in path for goal in goals):
-                return path, cost
-            
-            closed_set.add(current)
+            if all(g in path for g in goal_indices):
+                return list(path), f
             
             for neighbor in range(len(distance_matrix)):
                 if neighbor not in path:
-                    new_cost = cost + distance_matrix[current][neighbor]
-                    remaining_goals = [g for g in goals if g not in path]
-                    if remaining_goals:
-                        heuristic = min(distance_matrix[neighbor][g] for g in remaining_goals)
-                    else:
-                        heuristic = 0
-                    heapq.heappush(open_set, (new_cost + heuristic, neighbor, path + [neighbor]))
-        
-        return None, float('inf')
-    
+                    g_cost = sum(distance_matrix[path[i]][path[i+1]] for i in range(len(path)-1))
+                    new_g = g_cost + distance_matrix[current][neighbor]
+                    remaining = [g for g in goal_indices if g not in path and g != neighbor]
+                    h = min(distance_matrix[neighbor][g] for g in remaining) if remaining else 0
+                    
+                    heapq.heappush(queue, (new_g + h, neighbor, path + (neighbor,)))
+        return None, 0
+
     def optimize_route(self, restaurant_coords, deliveries):
+
         if not deliveries:
             return [], 0
+            
+        points = [restaurant_coords] + [(d['lat'], d['lng']) for d in deliveries]
+        n = len(points)
         
-        points = [restaurant_coords]
-        for d in deliveries:
-            points.append((d['lat'], d['lng']))
+        # Генерация матрицы расстояний
+        matrix = [[self.haversine_distance(points[i][0], points[i][1], 
+                                         points[j][0], points[j][1]) 
+                  for j in range(n)] for i in range(n)]
         
-        distance_matrix = self.calculate_distance_matrix(points)
-        delivery_indices = list(range(1, len(points)))
-        route, total_distance = self.a_star_search(0, delivery_indices, distance_matrix)
+        goal_indices = list(range(1, n))
+        path_indices, total_dist = self.a_star_search(0, goal_indices, matrix)
         
+        if not path_indices:
+            return [], 0
+
+        # Формирование упорядоченного маршрута
         optimized_route = []
-        for idx in route:
+        for idx in path_indices:
             if idx == 0:
-                optimized_route.append({'type': 'restaurant', 'coords': points[idx]})
+                optimized_route.append({"name": "Пиццерия", "address": "Точка сбора"})
             else:
-                optimized_route.append({
-                    'type': 'delivery',
-                    'coords': points[idx],
-                    'order_id': deliveries[idx-1].get('order_id'),
-                    'address': deliveries[idx-1].get('address')
-                })
-        
-        return optimized_route, total_distance
-    
-    def find_nearest_courier(self, restaurant_coords, couriers):
-        if not couriers:
-            return None, float('inf')
-        
-        nearest = None
-        min_distance = float('inf')
-        
-        for courier in couriers:
-            if courier.status == 'Свободен':
-                dist = self.haversine_distance(
-                    restaurant_coords[0], restaurant_coords[1],
-                    courier.current_lat, courier.current_lng
-                )
-                if dist < min_distance:
-                    min_distance = dist
-                    nearest = courier
-        
-        return nearest, min_distance
+                optimized_route.append(deliveries[idx-1])
+                
+        return optimized_route, total_dist
 
 
 class PriceCalculator:
+
     _instance = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
-    def calculate_pizza_price(self, base_price, toppings_price, quantity=1, discount_percent=0):
-        total = (base_price + toppings_price) * quantity
-        if discount_percent > 0:
-            total = total * (1 - discount_percent / 100)
-        return round(total, 2)
-    
-    def calculate_delivery_fee(self, total_amount, distance_km):
-        if total_amount >= 500:
-            return 0
-        base_fee = 100
-        distance_fee = int(distance_km * 20)
-        return min(base_fee + distance_fee, 300)
+
+    def calculate_total_price(self, base_price, toppings_price, quantity, distance_km):
+
+        subtotal = (float(base_price) + float(toppings_price)) * int(quantity)
+        
+        # Базовая стоимость доставки
+        delivery_cost = 0
+        if distance_km > 0:
+            # 100 руб старт + 20 руб за каждый км
+            delivery_cost = 100 + (float(distance_km) * 20)
+            
+        # Условие бесплатной доставки (Порог 500 руб)
+        if subtotal >= 500:
+            delivery_cost = 0
+            
+        return round(subtotal + delivery_cost, 2)
