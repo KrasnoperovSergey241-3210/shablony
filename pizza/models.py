@@ -81,6 +81,9 @@ class Order(models.Model):
         ('Отменен', 'Отменен'),
     ]
     
+    STATUS_FOR_DELIVERY = ['Принят', 'Готовится', 'В печи', 'Передан курьеру', 'Доставлен']
+    STATUS_FOR_PICKUP = ['Принят', 'Готовится', 'В печи', 'Доставлен']
+    
     order_id = models.AutoField(primary_key=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     courier = models.ForeignKey('Courier', on_delete=models.SET_NULL, null=True, blank=True)
@@ -90,37 +93,36 @@ class Order(models.Model):
     address = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._setup_state_machine()
-    
-    def _setup_state_machine(self):
-        states = ['Принят', 'Готовится', 'В печи', 'Передан курьеру', 'Доставлен', 'Отменен']
-        self.machine = Machine(model=self, states=states, initial=self.status or 'Принят')
+
+    def get_next_status(self):
+        if self.delivery_type == 'delivery':
+            statuses = self.STATUS_FOR_DELIVERY
+        else:
+            statuses = self.STATUS_FOR_PICKUP
         
-        self.machine.add_transition('start_cook', 'Принят', 'Готовится')
-        self.machine.add_transition('put_in_oven', 'Готовится', 'В печи')
-        self.machine.add_transition('give_to_courier', 'В печи', 'Передан курьеру')
-        self.machine.add_transition('deliver', 'Передан курьеру', 'Доставлен')
-        self.machine.add_transition('cancel', ['Принят', 'Готовится', 'В печи'], 'Отменен')
+        try:
+            idx = statuses.index(self.status)
+            if idx < len(statuses) - 1:
+                return statuses[idx + 1]
+        except ValueError:
+            pass
+        return None
     
-    def can_cancel(self):
-        return self.state in ['Принят', 'Готовится', 'В печи']
-    
-    def get_status_display_custom(self):
-        status_display = {
-            'Принят': 'Заказ принят',
-            'Готовится': 'Пицца готовится',
-            'В печи': 'Пицца в печи',
-            'Передан курьеру': 'Курьер в пути',
-            'Доставлен': 'Заказ доставлен',
-            'Отменен': 'Заказ отменен'
-        }
-        return status_display.get(self.state, self.state)
+    def can_transition_to(self, new_status):
+        if self.delivery_type == 'delivery':
+            valid_statuses = self.STATUS_FOR_DELIVERY
+        else:
+            valid_statuses = self.STATUS_FOR_PICKUP
+        
+        try:
+            current_idx = valid_statuses.index(self.status)
+            new_idx = valid_statuses.index(new_status)
+            return new_idx == current_idx + 1
+        except ValueError:
+            return False
     
     def __str__(self):
-        return f"Заказ #{self.order_id} — {self.get_status_display_custom()}"
+        return f"Заказ #{self.order_id} — {self.status}"
 
 class Courier(models.Model):
     courier_id = models.AutoField(primary_key=True)
