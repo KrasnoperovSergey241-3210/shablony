@@ -1,9 +1,53 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    h1 {
+        margin-bottom: 30px;
+    }
+    .card {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    th, td {
+        padding: 15px 12px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+    }
+    .quantity-input {
+        width: 70px;
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .remove-btn {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+    .remove-btn:hover {
+        background: #d32f2f;
+    }
+    .empty-cart {
+        text-align: center;
+        margin: 40px 0;
+    }
+</style>
+
+<h1>Корзина</h1>
 <div class="card">
-    <h1>Корзина</h1>
-    
     {% if cart_items %}
         <table>
             <thead>
@@ -19,19 +63,18 @@
                 {% for item in cart_items %}
                 <tr id="row-{{ item.key }}">
                     <td>{{ item.name }}</td>
-                    <td>{{ item.price }} ₽</td>
+                    <td>{{ item.price|floatformat:2 }} ₽</td>
                     <td>
-                        <input type="number" 
-                               class="quantity-input" 
-                               value="{{ item.quantity }}" 
-                               min="1" 
+                        <input type="number"
+                               class="quantity-input"
+                               value="{{ item.quantity }}"
+                               min="1"
                                max="10"
-                               data-key="{{ item.key }}"
-                               style="width: 60px; padding: 5px;">
+                               data-key="{{ item.key }}">
                     </td>
-                    <td class="item-total" id="total-{{ item.key }}">{{ item.total }} ₽</td>
+                    <td class="item-total" id="total-{{ item.key }}">{{ item.total|floatformat:2 }} ₽</td>
                     <td>
-                        <button class="remove-btn" data-key="{{ item.key }}" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Удалить</button>
+                        <button class="remove-btn" data-key="{{ item.key }}">Удалить</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -39,14 +82,14 @@
             <tfoot>
                 <tr>
                     <td colspan="3"><strong>Товары:</strong></td>
-                    <td><strong>{{ total }} ₽</strong></td>
+                    <td><strong>{{ total|floatformat:2 }} ₽</strong></td>
                     <td></td>
                 </tr>
                 <tr>
                     <td colspan="3"><strong>Доставка:</strong></td>
                     <td>
                         {% if delivery_fee > 0 %}
-                            {{ delivery_fee }} ₽
+                            {{ delivery_fee|floatformat:2 }} ₽
                         {% else %}
                             Бесплатно
                         {% endif %}
@@ -55,7 +98,7 @@
                 </tr>
                 <tr style="border-top: 2px solid #d32f2f;">
                     <td colspan="3"><strong>Итого:</strong></td>
-                    <td><strong style="font-size: 1.3em; color: #d32f2f;">{{ grand_total }} ₽</strong></td>
+                    <td><strong style="font-size: 1.3em; color: #d32f2f;">{{ grand_total|floatformat:2 }} ₽</strong></td>
                     <td></td>
                 </tr>
             </tfoot>
@@ -63,7 +106,7 @@
         
         {% if total < free_delivery_threshold %}
             <p style="color: #ff9800; margin-top: 10px;">
-                Добавьте товаров на {{ free_delivery_threshold|add:"-"|add:total }} ₽ для бесплатной доставки
+                Добавьте товаров на {{ free_delivery_threshold|add:"-"|add:total|floatformat:2 }} ₽ для бесплатной доставки
             </p>
         {% endif %}
         
@@ -72,26 +115,12 @@
             <a href="/create_order" class="btn btn-success">Оформить заказ</a>
         </div>
     {% else %}
-        <p class="text-center">Корзина пуста</p>
-        <div class="text-center">
+        <div class="empty-cart">
+            <p style="margin: 40px 0;">Корзина пуста</p>
             <a href="/constructor" class="btn">Перейти в конструктор</a>
         </div>
     {% endif %}
 </div>
-
-<style>
-    .quantity-input {
-        width: 60px;
-        padding: 5px;
-        text-align: center;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-    
-    .remove-btn:hover {
-        background: #d32f2f !important;
-    }
-</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -102,30 +131,21 @@
             input.addEventListener('change', function() {
                 const key = this.dataset.key;
                 const quantity = parseInt(this.value);
-                
                 if (quantity < 1) {
                     this.value = 1;
                     return;
                 }
-                
                 fetch('/api/update-cart/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrftoken
                     },
-                    body: JSON.stringify({
-                        key: key,
-                        quantity: quantity
-                    })
+                    body: JSON.stringify({ key: key, quantity: quantity })
                 })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.success) {
-                        window.location.reload();
-                    }
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) window.location.reload();
                 });
             });
         });
@@ -133,7 +153,6 @@
         removeButtons.forEach(function(button) {
             button.addEventListener('click', function() {
                 const key = this.dataset.key;
-                
                 if (confirm('Удалить товар из корзины?')) {
                     fetch('/api/remove-from-cart/', {
                         method: 'POST',
@@ -141,17 +160,11 @@
                             'Content-Type': 'application/json',
                             'X-CSRFToken': csrftoken
                         },
-                        body: JSON.stringify({
-                            key: key
-                        })
+                        body: JSON.stringify({ key: key })
                     })
-                    .then(function(response) {
-                        return response.json();
-                    })
-                    .then(function(data) {
-                        if (data.success) {
-                            window.location.reload();
-                        }
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) window.location.reload();
                     });
                 }
             });

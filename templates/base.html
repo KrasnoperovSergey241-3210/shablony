@@ -1,3 +1,4 @@
+<!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -515,6 +516,23 @@
             }
         }
     </style>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+    </script>
 </head>
 <body>
     <header>
@@ -535,9 +553,9 @@
                         <li><a href="/my_orders">Мои заказы</a></li>
                         <li><a href="/favorites">Избранное</a></li>
                     {% endif %}
-                    <li><a href="/kitchen">Кухня</a></li>
-                    <li><a href="/courier">Курьеры</a></li>
                     {% if request.session.role == 'admin' %}
+                        <li><a href="/kitchen">Кухня</a></li>
+                        <li><a href="/courier">Курьеры</a></li>
                         <li><a href="/admin/dashboard">Админ панель</a></li>
                     {% endif %}
                     <li><a href="/cart" class="cart-link">
@@ -567,6 +585,16 @@
                     {% endfor %}
                 </div>
             {% endif %}
+            <script>
+                setTimeout(() => {
+                    const alerts = document.querySelectorAll('.messages .alert');
+                    alerts.forEach(alert => {
+                        alert.style.transition = 'opacity 0.5s';
+                        alert.style.opacity = '0';
+                        setTimeout(() => alert.remove(), 500);
+                    });
+                }, 3500);
+            </script>
             
             {% if request.path == '/' %}
             <div class="hero">
@@ -700,23 +728,6 @@
                 mainNav.classList.remove('active');
             });
         });
-        
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        
-        const csrftoken = getCookie('csrftoken');
         
         function addToCart(type, id, name, price) {
             fetch('/api/add-to-cart/', {

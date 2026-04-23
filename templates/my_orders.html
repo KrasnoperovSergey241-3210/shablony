@@ -103,7 +103,7 @@
         background: #ecf0f1;
         border-radius: 50%;
         display: flex;
-    align-items: center;
+        align-items: center;
         justify-content: center;
         font-size: 1rem;
     }
@@ -128,6 +128,7 @@
         transition: all 0.3s ease;
         cursor: pointer;
         border: none;
+        font-weight: 600;
     }
     
     .btn-track {
@@ -137,6 +138,7 @@
     
     .btn-track:hover {
         background: #1976d2;
+        transform: translateY(-2px);
     }
     
     .btn-cancel {
@@ -182,6 +184,10 @@
         flex-wrap: wrap;
     }
     
+    .amount-cell {
+        white-space: nowrap;
+    }
+    
     @media (max-width: 768px) {
         .orders-table th,
         .orders-table td {
@@ -222,8 +228,7 @@
                     {% for order in orders %}
                     <tr>
                         <td>
-                            <strong>#{{
- order.order_id }}</strong>
+                            <strong>#{{ order.order_id }}</strong>
                         </td>
                         <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
                         <td>
@@ -259,7 +264,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="order-amount">{{ order.amount }} ₽</td>
+                        <td class="order-amount amount-cell">{{ order.amount|floatformat:2 }} ₽</td>
                         <td>
                             <div class="action-buttons">
                                 <a href="/order/{{ order.order_id }}/track/" class="btn-action btn-track">Отследить</a>
@@ -286,27 +291,27 @@
 </div>
 
 <script>
-function cancelOrder(orderId) {
-    if (confirm('Вы уверены, что хотите отменить заказ?')) {
-        fetch(`/order/${orderId}/cancel/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Произошла ошибка при отмене заказа');
-        });
+    function cancelOrder(orderId) {
+        if (confirm('Вы уверены, что хотите отменить заказ?')) {
+            fetch(`/order/${orderId}/cancel/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Произошла ошибка при отмене заказа');
+            });
+        }
     }
-}
 </script>
 {% endblock %}

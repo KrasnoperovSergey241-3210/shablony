@@ -20,6 +20,7 @@ class Admin(models.Model):
     username = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=255)
     permissions = models.CharField(max_length=255, default="full")
+    email = models.EmailField(unique=True, null=True, blank=True)
 
     def __str__(self):
         return self.username
