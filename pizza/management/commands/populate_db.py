@@ -1,17 +1,13 @@
 import random
 from datetime import timedelta
-
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
-
 from faker import Faker
-
 from pizza.models import (
     Client, Admin, Ingredient, CustomPizza,
     CustomPizzaIngredient, Order, Courier, OrderStatusHistory
 )
-
 
 class Command(BaseCommand):
     help = 'Автоматическое заполнение БД тестовыми данными через Faker'
@@ -43,7 +39,8 @@ class Command(BaseCommand):
             Admin.objects.create(
                 username='admin',
                 password=make_password('admin'),
-                permissions='full'
+                permissions='full',
+                email='admin@pizzaflow.com',
             )
             self.stdout.write(self.style.SUCCESS(
                 'Создан суперпользователь: admin / admin'
@@ -78,7 +75,7 @@ class Command(BaseCommand):
                 Courier.objects.create(
                     name=fake.name(),
                     phone=fake.phone_number(),
-                    status=random.choice(['Свободен', 'Занят']),
+                    status=random.choice(['Свободен', 'Отсутствует']),
                 )
             self.stdout.write(self.style.SUCCESS(f'Создано {Courier.objects.count()} курьеров'))
 
@@ -137,7 +134,9 @@ class Command(BaseCommand):
                     delivery_type = random.choice(['delivery', 'pickup'])
                     address = fake.address() if delivery_type == 'delivery' else 'Самовывоз'
                     amount = round(random.uniform(499, 2999), 2)
-                    courier = random.choice(couriers) if random.random() < 0.6 and couriers else None
+                    courier = None
+                    if delivery_type == 'delivery' and random.random() < 0.6 and couriers:
+                        courier = random.choice(couriers)
 
                     status_idx = random.randint(0, len(status_list) - 1)
                     status = status_list[status_idx]

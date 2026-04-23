@@ -108,21 +108,48 @@
     }
     
     .btn-cancel {
-        background: #f44336;
-        margin-top: 20px;
-    }
-    
-    .btn-cancel:hover {
         background: #d32f2f;
+        margin-top: 20px;
+        display: inline-block;
+        padding: 12px 25px;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.3s;
+        cursor: pointer;
+    }
+    .btn-back {
+        background: #d32f2f;
+        margin-top: 20px;
+        display: inline-block;
+        padding: 9px 25px;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.3s;
+        cursor: pointer;
+    }
+    .btn-cancel:hover, .btn-back:hover {
+        background: #b71c1c;
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+        transform: translateY(-2px);
+    }
+    .action-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
     }
 </style>
 
 <div class="tracking-container">
-    <h1>Отслеживание заказа #{{ order.order_id }}</h1>
+    <h1 style="margin-bottom: 30px;">Отслеживание заказа #{{ order.order_id }}</h1>
     
     <div class="order-info">
         <p><strong>Статус:</strong> {{ order.get_status_display }}</p>
-        <p><strong>Сумма:</strong> {{ order.amount }} ₽</p>
+        <p><strong>Сумма:</strong> {{ order.amount|floatformat:2 }} ₽</p>
         <p><strong>Тип доставки:</strong> {{ order.get_delivery_type_display }}</p>
         {% if order.address %}
         <p><strong>Адрес:</strong> {{ order.address }}</p>
@@ -132,7 +159,7 @@
     
     <div class="status-steps">
         <div class="progress-line">
-            <div class="progress-line-fill" style="width: {{ current_step|divisibleby:4|yesno:"0,25,50,75,100" }}%"></div>
+            <div class="progress-line-fill" style="width: {% if current_step == 0 %}0{% elif current_step == 1 %}25{% elif current_step == 2 %}50{% elif current_step == 3 %}75{% else %}100{% endif %}%;"></div>
         </div>
         {% for step in status_steps %}
         <div class="status-step {% if step.status == order.status %}active{% elif forloop.counter0 < current_step %}completed{% endif %}">
@@ -152,33 +179,34 @@
         {% endfor %}
     </div>
     
-    {% if order.status in 'Принят,Готовится,В печи' %}
-    <button class="btn btn-cancel" onclick="cancelOrder()">Отменить заказ</button>
-    {% endif %}
-    
-    <div style="margin-top: 20px;">
-        <a href="/my_orders" class="btn">Вернуться к заказам</a>
+    <div class="action-row">
+        {% if order.status in 'Принят,Готовится,В печи' %}
+        <button class="btn-cancel" onclick="cancelOrder()">Отменить заказ</button>
+        {% else %}
+        <div></div>
+        {% endif %}
+        <a href="/my_orders" class="btn-back">Вернуться к заказам</a>
     </div>
 </div>
 
 <script>
-function cancelOrder() {
-    if (confirm('Вы уверены, что хотите отменить заказ?')) {
-        fetch('/order/{{ order.order_id }}/cancel/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert(data.error);
-            }
-        });
+    function cancelOrder() {
+        if (confirm('Вы уверены, что хотите отменить заказ?')) {
+            fetch('/order/{{ order.order_id }}/cancel/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.error);
+                }
+            });
+        }
     }
-}
 </script>
 {% endblock %}
