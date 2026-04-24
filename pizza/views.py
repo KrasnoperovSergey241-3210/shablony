@@ -143,7 +143,7 @@ def cart_view(request):
             'total': item_total
         })
     
-    delivery_fee = 200 if total < 500 and total > 0 else 0
+    delivery_fee = 0  
     grand_total = total + delivery_fee
     
     context = {
@@ -247,7 +247,6 @@ def create_order(request):
             address = 'Самовывоз'
         
         config = ConfigManager()
-        free_threshold = config.get('delivery_free_threshold')
         
         client = Client.objects.get(client_id=request.session['user_id'])
         
@@ -256,15 +255,9 @@ def create_order(request):
         else:
             delivery_strategy = PickupStrategy()
         
-        if client.loyalty_points > 0:
-            pricing_strategy = LoyaltyPricing(client.loyalty_points)
-        else:
-            pricing_strategy = StandardPricing()
+        pricing_strategy = StandardPricing()
         
         order_context = OrderContext(pricing_strategy, delivery_strategy)
-        
-        optimizer = DeliveryOptimizer()
-        restaurant_coords = (55.751244, 37.618423)
         
         if address and address != 'Самовывоз':
             distance_km = 5
@@ -350,26 +343,47 @@ def kitchen(request):
     return render(request, 'kitchen.html', {'orders': orders})
 
 def update_status(request, order_id):
+    """API для умного конвейера - обновление статуса заказа"""
     order = get_object_or_404(Order, order_id=order_id)
-    statuses = ['Принят', 'Готовится', 'В печи', 'Передан курьеру', 'Доставлен']
+    
+    if order.delivery_type == 'delivery':
+        statuses = ['Принят', 'Готовится', 'В печи', 'Передан курьеру', 'Доставлен']
+    else:
+        statuses = ['Принят', 'Готовится', 'В печи', 'Доставлен']
+    
     try:
         idx = statuses.index(order.status)
         if idx < len(statuses) - 1:
-            order.status = statuses[idx + 1]
+            new_status = statuses[idx + 1]
+            order.status = new_status
             order.save()
             OrderStatusHistory.objects.create(order=order, status=order.status)
             
-            if order.status == 'Передан курьеру' and order.courier:
-                courier = order.courier
-                courier.status = 'В пути'
-                courier.save()
-            elif order.status == 'Доставлен' and order.courier:
-                courier = order.courier
-                courier.status = 'Свободен'
-                courier.save()
-    except:
+            if order.delivery_type == 'delivery':
+                if order.status == 'Передан курьеру' and order.courier:
+                    courier = order.courier
+                    courier.status = 'В пути'
+                    courier.save()
+                elif order.status == 'Доставлен' and order.courier:
+                    courier = order.courier
+                    courier.status = 'Свободен'
+                    courier.save()
+            
+            return JsonResponse({
+                'status': order.status, 
+                'order_id': order.order_id,
+                'is_finished': False
+            })
+        else:
+            return JsonResponse({
+                'status': order.status, 
+                'order_id': order.order_id,
+                'is_finished': True
+            })
+    except ValueError:
         pass
-    return JsonResponse({'status': order.status, 'order_id': order.order_id})
+    
+    return JsonResponse({'status': order.status, 'order_id': order.order_id, 'is_finished': True})
 
 def courier_view(request):
     couriers = Courier.objects.all()
@@ -400,31 +414,31 @@ def init_data(request):
             admin = Admin.objects.create(username="admin", password=make_password("admin"))
 
         if not Pizza.objects.exists():
-            pizza1 = Pizza.objects.create(
+            Pizza.objects.create(
                 name="Маргарита",
                 description="Томатный соус, моцарелла, свежие помидоры, базилик",
                 base_price=499,
                 category="Классическая"
             )
-            pizza2 = Pizza.objects.create(
+            Pizza.objects.create(
                 name="Пепперони",
                 description="Пикантная пепперони, томатный соус, моцарелла",
                 base_price=599,
                 category="Мясная"
             )
-            pizza3 = Pizza.objects.create(
+            Pizza.objects.create(
                 name="Четыре сыра",
                 description="Моцарелла, пармезан, горгонзола, рикотта",
                 base_price=649,
                 category="Сырная"
             )
-            pizza4 = Pizza.objects.create(
+            Pizza.objects.create(
                 name="Гавайская",
                 description="Курица, ананас, моцарелла, томатный соус",
                 base_price=579,
                 category="Фруктовая"
             )
-            pizza5 = Pizza.objects.create(
+            Pizza.objects.create(
                 name="Мясная",
                 description="Бекон, пепперони, ветчина, курица, моцарелла",
                 base_price=699,
@@ -483,13 +497,11 @@ def get_config_api(request):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 def get_cart_count(request):
-    """API для получения количества товаров в корзине"""
     cart = request.session.get('cart', {})
     count = sum(item.get('quantity', 1) for item in cart.values())
     return JsonResponse({'count': count})
 
 def get_order_status(request, order_id):
-    """API для получения статуса заказа"""
     try:
         order = Order.objects.get(order_id=order_id)
         status_history = OrderStatusHistory.objects.filter(order=order).values('status', 'changed_at')
@@ -509,18 +521,25 @@ def get_order_status(request, order_id):
         return JsonResponse({'error': 'Order not found'}, status=404)
 
 def order_tracking(request, order_id):
-    """Страница отслеживания заказа"""
     try:
         order = Order.objects.get(order_id=order_id)
         status_history = OrderStatusHistory.objects.filter(order=order).order_by('changed_at')
         
-        status_steps = [
-            {'status': 'Принят', 'icon': '📋', 'description': 'Заказ принят'},
-            {'status': 'Готовится', 'icon': '👨‍🍳', 'description': 'Пицца готовится'},
-            {'status': 'В печи', 'icon': '🔥', 'description': 'Пицца в печи'},
-            {'status': 'Передан курьеру', 'icon': '🛵', 'description': 'Курьер в пути'},
-            {'status': 'Доставлен', 'icon': '✅', 'description': 'Заказ доставлен'},
-        ]
+        if order.delivery_type == 'delivery':
+            status_steps = [
+                {'status': 'Принят', 'icon': '📋', 'description': 'Заказ принят'},
+                {'status': 'Готовится', 'icon': '👨‍🍳', 'description': 'Пицца готовится'},
+                {'status': 'В печи', 'icon': '🔥', 'description': 'Пицца в печи'},
+                {'status': 'Передан курьеру', 'icon': '🛵', 'description': 'Курьер в пути'},
+                {'status': 'Доставлен', 'icon': '✅', 'description': 'Заказ доставлен'},
+            ]
+        else:
+            status_steps = [
+                {'status': 'Принят', 'icon': '📋', 'description': 'Заказ принят'},
+                {'status': 'Готовится', 'icon': '👨‍🍳', 'description': 'Пицца готовится'},
+                {'status': 'В печи', 'icon': '🔥', 'description': 'Пицца в печи'},
+                {'status': 'Доставлен', 'icon': '✅', 'description': 'Заказ готов к выдаче'},
+            ]
         
         current_step = 0
         for i, step in enumerate(status_steps):
@@ -540,14 +559,15 @@ def order_tracking(request, order_id):
         return redirect('index')
 
 def cancel_order(request, order_id):
-    """Отмена заказа"""
     if 'user_id' not in request.session:
         return JsonResponse({'error': 'Not authenticated'}, status=401)
     
     try:
         order = Order.objects.get(order_id=order_id, client_id=request.session['user_id'])
         
-        if order.status in ['Принят', 'Готовится', 'В печи']:
+        cancel_allowed_statuses = ['Принят', 'Готовится', 'В печи']
+        
+        if order.status in cancel_allowed_statuses:
             order.status = 'Отменен'
             order.save()
             OrderStatusHistory.objects.create(order=order, status='Отменен', note='Отменен клиентом')
@@ -565,7 +585,6 @@ def cancel_order(request, order_id):
         return JsonResponse({'error': 'Order not found'}, status=404)
 
 def assign_courier_to_order(request, courier_id):
-    """Назначение курьера на заказ"""
     if request.method == 'POST':
         data = json.loads(request.body)
         order_id = data.get('order_id')
@@ -574,7 +593,7 @@ def assign_courier_to_order(request, courier_id):
             courier = Courier.objects.get(courier_id=courier_id)
             order = Order.objects.get(order_id=order_id)
             
-            if courier.status == 'Свободен' and order.status == 'В печи':
+            if courier.status == 'Свободен' and order.status == 'В печи' and order.delivery_type == 'delivery':
                 order.courier = courier
                 order.status = 'Передан курьеру'
                 order.save()
@@ -593,7 +612,6 @@ def assign_courier_to_order(request, courier_id):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 def sales_report(request):
-    """Отчет по продажам"""
     if request.session.get('role') != 'admin':
         return redirect('admin_login')
     
@@ -627,7 +645,6 @@ def sales_report(request):
     return render(request, 'reports/sales.html', context)
 
 def popular_pizzas_report(request):
-    """Отчет по популярным пиццам"""
     if request.session.get('role') != 'admin':
         return redirect('admin_login')
     

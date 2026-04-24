@@ -520,7 +520,7 @@
     <header>
         <div class="header-container">
             <a href="/" class="logo">
-                <span>🍕</span> PizzaFlow
+                PizzaFlow
             </a>
             
             <button class="menu-toggle" id="menuToggle">
@@ -541,15 +541,15 @@
                         <li><a href="/admin/dashboard">Админ панель</a></li>
                     {% endif %}
                     <li><a href="/cart" class="cart-link">
-                        🛒 Корзина
+                        Корзина
                         {% if cart_count > 0 %}
                         <span class="cart-badge" id="cartCount">{{ cart_count }}</span>
                         {% endif %}
                     </a></li>
                     {% if request.session.user_id %}
-                        <li><a href="/logout">🚪 Выйти</a></li>
+                        <li><a href="/logout">Выйти</a></li>
                     {% else %}
-                        <li><a href="/login">🔑 Войти</a></li>
+                        <li><a href="/login">Войти</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -651,11 +651,11 @@
     <footer>
         <div class="footer-content">
             <div class="footer-column">
-                <h3>🍕 PizzaFlow</h3>
+                <h3>PizzaFlow</h3>
                 <p>Мы готовим самую вкусную пиццу в городе с 2023 года.</p>
             </div>
             <div class="footer-column">
-                <h3>📅 Режим работы</h3>
+                <h3>Режим работы</h3>
                 <ul>
                     <li>Пн-Пт: 10:00 - 23:00</li>
                     <li>Сб-Вс: 11:00 - 00:00</li>
@@ -663,15 +663,15 @@
                 </ul>
             </div>
             <div class="footer-column">
-                <h3>📞 Контакты</h3>
+                <h3>Контакты</h3>
                 <ul>
-                    <li>📱 +7 (999) 123-45-67</li>
-                    <li>✉️ info@pizzaflow.ru</li>
-                    <li>📍 г. Москва, ул. Пиццерийная, 15</li>
+                    <li>+7 (999) 123-45-67</li>
+                    <li>info@pizzaflow.ru</li>
+                    <li>г. Москва, ул. Пиццерийная, 15</li>
                 </ul>
             </div>
             <div class="footer-column">
-                <h3>🔗 Ссылки</h3>
+                <h3>Ссылки</h3>
                 <ul>
                     <li><a href="/constructor">Конструктор</a></li>
                     <li><a href="/my_orders">Мои заказы</a></li>
