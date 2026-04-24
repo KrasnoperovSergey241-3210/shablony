@@ -3,11 +3,12 @@ from django.http import JsonResponse
 from django.contrib import messages
 from .models import *
 from django.contrib.auth.hashers import make_password, check_password
-from datetime import datetime
+from datetime import datetime, date
 import json
 from .optimizer import DeliveryOptimizer, PriceCalculator
 from .strategies import OrderContext, StandardPricing, LoyaltyPricing, StandardDelivery, PickupStrategy
 from .singletons import ConfigManager, EventBus, CacheManager
+from django.db.models import Q
 
 def index(request):
     ingredients = Ingredient.objects.all()
@@ -59,7 +60,7 @@ def admin_login(request):
         username = request.POST['username']
         password = request.POST['password']
         try:
-            admin = Admin.objects.get(username=username)
+            admin = Admin.objects.get(Q(username=username) | Q(email=username))
             if check_password(password, admin.password):
                 request.session['user_id'] = admin.admin_id
                 request.session['role'] = 'admin'
@@ -250,22 +251,26 @@ def create_order(request):
         
         client = Client.objects.get(client_id=request.session['user_id'])
         
+        loyalty_discount = 0.0
+        if client.registration_date:
+            years = (timezone.now().date() - client.registration_date.date()).days // 365
+            if years >= 2:
+                loyalty_discount = 0.05
+            elif years >= 1:
+                loyalty_discount = 0.03
+        discounted_total = total * (1 - loyalty_discount)
+        
         if delivery_type == 'delivery':
             delivery_strategy = StandardDelivery()
         else:
             delivery_strategy = PickupStrategy()
         
         pricing_strategy = StandardPricing()
-        
         order_context = OrderContext(pricing_strategy, delivery_strategy)
         
-        if address and address != 'Самовывоз':
-            distance_km = 5
-        else:
-            distance_km = 0
-        
+        distance_km = 5 
         final_total = order_context.calculate_total(
-            total, 0, 1, distance_km, total
+            discounted_total, 0, 1, distance_km, discounted_total
         )
         
         order = Order.objects.create(
@@ -279,7 +284,7 @@ def create_order(request):
             free_courier = Courier.objects.filter(status='Свободен').first()
             if free_courier:
                 order.courier = free_courier
-                free_courier.status = 'Занят'
+                free_courier.status = 'В пути'
                 free_courier.save()
                 order.save()
         
@@ -321,6 +326,7 @@ def my_orders(request):
 
 def admin_dashboard(request):
     if request.session.get('role') != 'admin':
+        request.session.flush() 
         return redirect('admin_login')
     orders = Order.objects.all().order_by('-created_at')
     ingredients = Ingredient.objects.all()
@@ -339,6 +345,9 @@ def admin_dashboard(request):
     return render(request, 'admin_dashboard.html', context)
 
 def kitchen(request):
+    if request.session.get('role') != 'admin':
+        request.session.flush() 
+        return redirect('admin_login')
     orders = Order.objects.all().order_by('created_at')
     return render(request, 'kitchen.html', {'orders': orders})
 
@@ -386,6 +395,9 @@ def update_status(request, order_id):
     return JsonResponse({'status': order.status, 'order_id': order.order_id, 'is_finished': True})
 
 def courier_view(request):
+    if request.session.get('role') != 'admin':
+        request.session.flush() 
+        return redirect('admin_login')
     couriers = Courier.objects.all()
     return render(request, 'courier.html', {'couriers': couriers})
 
@@ -570,7 +582,7 @@ def cancel_order(request, order_id):
         if order.status in cancel_allowed_statuses:
             order.status = 'Отменен'
             order.save()
-            OrderStatusHistory.objects.create(order=order, status='Отменен', note='Отменен клиентом')
+            OrderStatusHistory.objects.create(order=order, status='Отменен')
             
             if order.courier:
                 courier = order.courier

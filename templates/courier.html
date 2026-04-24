@@ -1,36 +1,27 @@
 {% extends 'base.html' %}
 {% block content %}
-
 <style>
     .courier-card {
         background: #fff;
         padding: 20px;
         margin: 15px 0;
         border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        border-left: 6px solid #ff5722;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        border-left: 6px solid #d32f2f;
     }
-    .status-free {
-        color: #4caf50;
-        font-weight: bold;
-    }
-    .status-busy {
-        color: #f44336;
-        font-weight: bold;
-    }
+    .status-free { color: #4caf50; font-weight: bold; }
+    .status-onway { color: #fbc02d; font-weight: bold; }
+    .status-absent { color: #d32f2f; font-weight: bold; }
 </style>
 
 <h1>Курьеры</h1>
-
 {% for courier in couriers %}
     <div class="courier-card">
-        <strong>{{ courier.name }}</strong> — {{ courier.phone }}<br><br>
-        
+        <strong>{{ courier.name }}</strong> – {{ courier.phone }}<br><br>
         Статус: 
-        <span class="{% if courier.status == 'Свободен' %}status-free{% else %}status-busy{% endif %}">
+        <span class="{% if courier.status == 'Свободен' %}status-free{% elif courier.status == 'В пути' %}status-onway{% else %}status-absent{% endif %}">
             {{ courier.status }}
         </span>
     </div>
 {% endfor %}
-
 {% endblock %}
