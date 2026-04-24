@@ -1,14 +1,51 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+        h1 {
+        margin-bottom: 30px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+    }
+    .form-control {
+        width: 100%;
+        max-width: 400px;
+        padding: 12px 15px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    .btn-admin {
+        display: inline-block;
+        background: #d32f2f;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 8px;
+        text-decoration: none;
+        margin-left: 10px;
+        transition: background 0.3s;
+        font-weight: 600;
+    }
+    .btn-admin:hover {
+        background: #b71c1c;
+    }
+</style>
 <h1>Вход для администратора</h1>
 <form method="POST">
     {% csrf_token %}
-    <p><strong>Логин (username):</strong><br>
-        <input type="text" name="username" value="admin" required style="width:300px; padding:8px;">
-    </p>
-    <p><strong>Пароль:</strong><br>
-        <input type="password" name="password" value="admin" required style="width:300px; padding:8px;">
-    </p>
-    <button type="submit" style="padding:12px 25px;">Войти как администратор</button>
+    <div class="form-group">
+        <label><strong>Логин (username):</strong></label>
+        <input type="text" name="username" required class="form-control">
+    </div>
+    <div class="form-group">
+        <label><strong>Пароль:</strong></label>
+        <input type="password" name="password" required class="form-control">
+    </div>
+    <button type="submit" class="btn-admin">Войти как администратор</button>
 </form>
 {% endblock %}

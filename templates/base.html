@@ -556,7 +556,7 @@
                     {% if request.session.role == 'admin' %}
                         <li><a href="/kitchen">Кухня</a></li>
                         <li><a href="/courier">Курьеры</a></li>
-                        <li><a href="/admin/dashboard">Админ панель</a></li>
+                        <li><a href="/admin-dashboard">Админ панель</a></li>
                     {% endif %}
                     <li><a href="/cart" class="cart-link">
                         Корзина
@@ -567,6 +567,7 @@
                     {% if request.session.user_id %}
                         <li><a href="/logout">Выйти</a></li>
                     {% else %}
+                        <li><a href="/admin-login">Войти как админ</a></li>
                         <li><a href="/login">Войти</a></li>
                     {% endif %}
                 </ul>

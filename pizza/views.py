@@ -62,7 +62,10 @@ def admin_login(request):
         try:
             admin = Admin.objects.get(Q(username=username) | Q(email=username))
             if check_password(password, admin.password):
-                ...
+                request.session['user_id'] = admin.admin_id
+                request.session['role'] = 'admin'
+                request.session['user_name'] = admin.username
+                return redirect('admin_dashboard')
         except Admin.DoesNotExist:
             pass
         messages.error(request, 'Неверные данные администратора')
