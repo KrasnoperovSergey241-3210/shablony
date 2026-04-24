@@ -1,20 +1,183 @@
 {% extends 'base.html' %}
-{% block content %}
-<h1>Админ-панель</h1>
-<h2>Все заказы</h2>
-<table border="1" cellpadding="8" style="width:100%; border-collapse:collapse;">
-    <tr><th>ID</th><th>Клиент</th><th>Статус</th><th>Тип</th><th>Сумма</th></tr>
-    {% for order in orders %}
-    <tr>
-        <td>#{{ order.order_id }}</td>
-        <td>{{ order.client.name }}</td>
-        <td>{{ order.status }}</td>
-        <td>{{ order.delivery_type }}</td>
-        <td>{{ order.amount }} ₽</td>
-    </tr>
-    {% endfor %}
-</table>
 
-<h2>Ингредиенты (можно редактировать в Django-админке)</h2>
-<a href="/admin/" target="_blank">Открыть полную Django-админку →</a>
+{% block content %}
+<style>
+    .orders-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .orders-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .orders-header h1 {
+        font-size: 2rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .orders-header p {
+        color: #7f8c8d;
+    }
+    
+    .orders-table {
+        width: 100%;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .orders-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .orders-table th {
+        background: #2c3e50;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .orders-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #ecf0f1;
+        vertical-align: middle;
+    }
+    
+    .orders-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .status-accepted {
+        background: #fff3e0;
+        color: #f39c12;
+    }
+    
+    .status-cooking {
+        background: #e3f2fd;
+        color: #2196f3;
+    }
+    
+    .status-oven {
+        background: #ffebee;
+        color: #f44336;
+    }
+    
+    .status-delivery {
+        background: #f3e5f5;
+        color: #9c27b0;
+    }
+    
+    .status-delivered {
+        background: #e8f5e9;
+        color: #4caf50;
+    }
+    
+    .status-cancelled {
+        background: #ffebee;
+        color: #f44336;
+    }
+    
+    .order-amount {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .admin-link {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.75rem 1.5rem;
+        background: #2c3e50;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: background 0.3s ease;
+    }
+    
+    .admin-link:hover {
+        background: #1a252f;
+    }
+    
+    @media (max-width: 768px) {
+        .orders-table th,
+        .orders-table td {
+            padding: 0.75rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<div class="orders-container">
+    <div class="orders-header">
+        <h1>Админ-панель</h1>
+        <p>Управление заказами</p>
+    </div>
+
+    <div class="orders-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Клиент</th>
+                    <th>Статус</th>
+                    <th>Тип</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><strong>#{{ order.order_id }}</strong></td>
+                    <td>{{ order.client.name }}</td>
+                    <td>
+                        {% if order.status == 'Принят' %}
+                            <span class="status-badge status-accepted">Принят</span>
+                        {% elif order.status == 'Готовится' %}
+                            <span class="status-badge status-cooking">Готовится</span>
+                        {% elif order.status == 'В печи' %}
+                            <span class="status-badge status-oven">В печи</span>
+                        {% elif order.status == 'Передан курьеру' %}
+                            <span class="status-badge status-delivery">Передан курьеру</span>
+                        {% elif order.status == 'Доставлен' %}
+                            <span class="status-badge status-delivered">Доставлен</span>
+                        {% elif order.status == 'Отменен' %}
+                            <span class="status-badge status-cancelled">Отменен</span>
+                        {% else %}
+                            <span class="status-badge">{{ order.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order.delivery_type == 'delivery' %}
+                            Доставка
+                        {% else %}
+                            Самовывоз
+                        {% endif %}
+                    </td>
+                    <td class="order-amount">{{ order.amount|floatformat:2 }} ₽</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center;">
+        <a href="/admin/" target="_blank" class="admin-link">
+            Открыть полную Django-админку →
+        </a>
+    </div>
+</div>
+
 {% endblock %}
